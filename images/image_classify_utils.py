@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from sklearn.metrics import classification_report, confusion_matrix
 
 IMG_SHAPE = 150
 NUM_CLASS = 3
@@ -37,7 +38,7 @@ def gen_image(train_dir, val_dir, batch_size=100, val_split=0.2, transform_data=
     val_data_gen = image_gen_val.flow_from_directory(
         batch_size=batch_size,
         directory=val_dir,
-        shuffle=True,
+        shuffle=False,
         target_size=(IMG_SHAPE, IMG_SHAPE),
         subset='validation',
         class_mode='categorical'
@@ -74,8 +75,6 @@ def build_model(train_data_gen, val_data_gen, epochs, dropout=False):
         epochs=epochs,
         validation_data=val_data_gen,
         verbose=0
-#         steps_per_epoch=1,
-#         validation_steps=1
     )
     return (model, history)
     
@@ -103,3 +102,13 @@ def viz_results(history, epochs):
     plt.title('Training and Validation Loss')
     plt.show()
     return (acc, val_acc)
+
+def viz_confusion_matrix(model, val_data_gen):
+    #Confution Matrix and Classification Report
+    Y_pred = model.predict_generator(val_data_gen, 1)
+    y_pred = np.argmax(Y_pred, axis=1)
+    print('Confusion Matrix')
+    print(confusion_matrix(val_data_gen.classes, y_pred))
+    print('Classification Report')
+    target_names = ['Jin', 'Leona', 'Mira']
+    print(classification_report(val_data_gen.classes, y_pred, target_names=target_names))
